@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabasclient';
+import { supabase } from './supabaseclient';
 import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table } from 'lucide-react';
 
 export default function App() {
