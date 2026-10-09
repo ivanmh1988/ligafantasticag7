@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseclient';
-import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table } from 'lucide-react';
+import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, LogIn } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -8,6 +8,11 @@ export default function App() {
   const [tab, setTab] = useState('once'); // 'once', 'plantilla', 'clasificacion', 'mvp', 'calendario', 'clasif_real'
   const [formacion, setFormacion] = useState('1-4-4-2');
   
+  // Estados para Login
+  const [emailLogin, setEmailLogin] = useState('');
+  const [passwordLogin, setPasswordLogin] = useState('');
+  const [errorLogin, setErrorLogin] = useState('');
+
   // Base de Datos Supabase
   const [jugadoresBD, setJugadoresBD] = useState([]);
   const [equiposBD, setEquiposBD] = useState([]);
@@ -40,9 +45,7 @@ export default function App() {
   const [mostrarAyudaModal, setMostrarAyudaModal] = useState(false);
   const [alerta, setAlerta] = useState('');
 
-  // Silueta exacta de perfil oscuro sobre fondo blanco
   const SILUETA_DEFAULT = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500' width='100%' height='100%'><rect width='500' height='500' fill='%23ffffff'/><path d='M250 200c35.35 0 64-28.65 64-64s-28.65-64-64-64-64 28.65-64 64 28.65 64 64 64zm0 32c-48 0-144 24-144 72v48h288v-48c0-48-96-72-144-72z' fill='%230f172a'/></svg>";
-
   const LOGO_GRADA_SIETE = "https://gradasiete.com/wp-content/uploads/2023/02/cropped-logo-bueno-3.png";
 
   useEffect(() => {
@@ -88,6 +91,23 @@ export default function App() {
     }
   }, []);
 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrorLogin('');
+    if (!supabase) {
+      // Modo simulación si no hay cliente configurado
+      setSession({ user: { email: emailLogin } });
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({
+      email: emailLogin,
+      password: passwordLogin,
+    });
+    if (error) {
+      setErrorLogin(error.message);
+    }
+  };
+
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -108,6 +128,53 @@ export default function App() {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#ffffff', fontFamily: 'sans-serif' }}>
         <h3>Cargando Liga Fantástica Grada Siete...</h3>
+      </div>
+    );
+  }
+
+  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE INICIO DE SESIÓN
+  if (!session) {
+    return (
+      <div className="notranslate" translate="no" style={{ backgroundColor: '#0f172a', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+        <div style={{ backgroundColor: '#ffffff', color: '#0f172a', width: '100%', maxWidth: '380px', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+          <img src={LOGO_GRADA_SIETE} alt="Grada Siete" style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 12px auto', display: 'block' }} />
+          <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Liga Fantástica G7</h2>
+          <p style={{ margin: '0 0 20px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Accede para gestionar tu club y tus alineaciones</p>
+
+          {errorLogin && (
+            <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
+              {errorLogin}
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
+              <input 
+                type="email" 
+                value={emailLogin} 
+                onChange={(e) => setEmailLogin(e.target.value)} 
+                placeholder="manager@gradasiete.com" 
+                required
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CONTRASEÑA</label>
+              <input 
+                type="password" 
+                value={passwordLogin} 
+                onChange={(e) => setPasswordLogin(e.target.value)} 
+                placeholder="••••••••" 
+                required
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
+              <LogIn style={{ width: '15px', height: '15px' }} /> Iniciar Sesión
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -307,8 +374,7 @@ export default function App() {
         .ayuda-parpadeante {
           animation: pulseBlink 1.8s infinite ease-in-out;
         }
-        /* CORRECCIÓN GLOBAL PARA DESPLEGABLES EN SMARTPHONES (ANDROID E IOS) */
-        select, input[type="text"] {
+        select, input[type="text"], input[type="password"], input[type="email"] {
           background-color: #ffffff !important;
           color: #0f172a !important;
           -webkit-appearance: none;
@@ -934,7 +1000,7 @@ export default function App() {
 
         </main>
 
-        {/* MODAL DE AYUDA Y REGLAMENTO OFICIAL (AMPLIADO CON SISTEMA DE PUNTUACIONES) */}
+        {/* MODAL DE AYUDA Y REGLAMENTO OFICIAL */}
         {mostrarAyudaModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 150, padding: '16px' }}>
             <div style={{ backgroundColor: '#ffffff', width: '100%', maxWidth: '400px', borderRadius: '20px', padding: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', maxHeight: '85vh', overflowY: 'auto' }}>
