@@ -88,6 +88,22 @@ export default function App() {
     }
   }, []);
 
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setSession(null);
+  };
+
+  const guardarNombreEquipo = () => {
+    if (!nombreEquipoFantasy.trim()) {
+      setAlerta('Introduce un nombre válido para tu equipo.');
+      return;
+    }
+    setAlerta('¡Nombre de equipo guardado correctamente!');
+    setTimeout(() => setAlerta(''), 2500);
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#ffffff', fontFamily: 'sans-serif' }}>
@@ -212,7 +228,8 @@ export default function App() {
       return;
     }
     setPlantillaGuardada(true);
-    setAlerta('');
+    setAlerta('¡Plantilla guardada correctamente!');
+    setTimeout(() => setAlerta(''), 2500);
   };
 
   const guardarOnce = () => {
@@ -290,6 +307,14 @@ export default function App() {
         .ayuda-parpadeante {
           animation: pulseBlink 1.8s infinite ease-in-out;
         }
+        /* CORRECCIÓN GLOBAL PARA DESPLEGABLES EN SMARTPHONES (ANDROID E IOS) */
+        select, input[type="text"] {
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: auto;
+        }
       `}</style>
 
       <div style={{ backgroundColor: '#f8fafc', color: '#0f172a', width: '100%', maxWidth: '440px', minHeight: '100vh', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', paddingBottom: '120px', overflowX: 'hidden' }}>
@@ -319,7 +344,7 @@ export default function App() {
               ?
             </button>
 
-            <button onClick={() => supabase?.auth.signOut()} style={{ backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
+            <button onClick={handleLogout} style={{ backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
               Salir
             </button>
           </div>
@@ -334,12 +359,17 @@ export default function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#ffffff', padding: '6px 10px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                 <div>
                   <span style={{ fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', fontWeight: '800', display: 'block' }}>MI CLUB FANTASY</span>
-                  <input 
-                    type="text" 
-                    value={nombreEquipoFantasy} 
-                    onChange={(e) => setNombreEquipoFantasy(e.target.value)}
-                    style={{ border: 'none', fontWeight: '900', fontSize: '13px', color: '#0f172a', outline: 'none', background: 'transparent', width: '150px' }}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '1px' }}>
+                    <input 
+                      type="text" 
+                      value={nombreEquipoFantasy} 
+                      onChange={(e) => setNombreEquipoFantasy(e.target.value)}
+                      style={{ border: '1px solid #cbd5e1', borderRadius: '4px', fontWeight: '900', fontSize: '12px', color: '#0f172a', outline: 'none', background: '#ffffff', width: '140px', padding: '2px 4px' }}
+                    />
+                    <button onClick={guardarNombreEquipo} style={{ backgroundColor: '#22c55e', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '3px 6px', fontSize: '10px', fontWeight: '800', cursor: 'pointer' }}>
+                      Fijar
+                    </button>
+                  </div>
                 </div>
                 <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '3px 8px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10.5px', fontWeight: '700', border: '1px solid #fee2e2' }}>
                   <Clock style={{ width: '11px', height: '11px' }} />
@@ -356,7 +386,7 @@ export default function App() {
 
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ flex: 1, backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '5px 8px' }}>
-                  <select value={formacion} onChange={(e) => setFormacion(e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent', fontWeight: '700', fontSize: '11.5px', outline: 'none' }}>
+                  <select value={formacion} onChange={(e) => setFormacion(e.target.value)} style={{ width: '100%', border: 'none', background: '#ffffff', fontWeight: '700', fontSize: '11.5px', outline: 'none', color: '#0f172a' }}>
                     <option value="1-4-4-2">Formación 1-4-4-2</option>
                     <option value="1-4-3-3">Formación 1-4-3-3</option>
                     <option value="1-3-4-3">Formación 1-3-4-3</option>
@@ -483,7 +513,7 @@ export default function App() {
             </div>
           )}
 
-          {/* PESTAÑA MI PLANTILLA (CON SILUETA/FOTO DE JUGADOR Y ENTRENADOR) */}
+          {/* PESTAÑA MI PLANTILLA */}
           {tab === 'plantilla' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -539,7 +569,7 @@ export default function App() {
                 ))}
               </div>
 
-              {/* SECCIÓN JUGADORES CON SILUETA/FOTO */}
+              {/* SECCIÓN JUGADORES */}
               <div>
                 <h3 style={{ fontSize: '10px', fontWeight: '900', color: '#dc2626', textTransform: 'uppercase', marginBottom: '2px' }}>⚽ Selección de Jugadores</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', maxHeight: '255px', overflowY: 'auto', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '5px' }}>
@@ -572,7 +602,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* SECCIÓN ENTRENADORES ANEFF CON SILUETA/FOTO */}
+              {/* SECCIÓN ENTRENADORES ANEFF */}
               <div>
                 <h3 style={{ fontSize: '10px', fontWeight: '900', color: '#7c3aed', textTransform: 'uppercase', marginBottom: '2px' }}>📋 Selección de Entrenadores ANEFF</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%', maxHeight: '160px', overflowY: 'auto', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '5px' }}>
@@ -610,13 +640,18 @@ export default function App() {
               <div style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', fontWeight: '800', display: 'block' }}>NOMBRE DE TU CLUB</span>
-                    <input 
-                      type="text" 
-                      value={nombreEquipoFantasy} 
-                      onChange={(e) => setNombreEquipoFantasy(e.target.value)}
-                      style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '3px 6px', fontWeight: '900', fontSize: '13px', color: '#0f172a', outline: 'none', background: '#f8fafc', width: '160px', marginTop: '1px' }}
-                    />
+                    <span style={{ fontSize: '8.5px', textTransform: 'uppercase', color: '#64748b', fontWeight: '800', display: 'block' }}>NOMBRE DE TU CLUB (FIJO)</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                      <input 
+                        type="text" 
+                        value={nombreEquipoFantasy} 
+                        onChange={(e) => setNombreEquipoFantasy(e.target.value)}
+                        style={{ border: '1px solid #cbd5e1', borderRadius: '6px', padding: '4px 8px', fontWeight: '900', fontSize: '13px', color: '#0f172a', outline: 'none', background: '#ffffff', width: '160px' }}
+                      />
+                      <button onClick={guardarNombreEquipo} style={{ backgroundColor: '#22c55e', color: '#ffffff', border: 'none', borderRadius: '6px', padding: '5px 10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>
+                        Guardar
+                      </button>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <div style={{ backgroundColor: '#f0fdf4', padding: '6px 10px', borderRadius: '8px', border: '1px solid #dcfce7', textAlign: 'center' }}>
@@ -633,7 +668,7 @@ export default function App() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ margin: 0, fontSize: '16px', fontWeight: '800', color: '#0f172a' }}>Clasificación Fantasy</h2>
-                <select value={jornadaSeleccionadaClasif} onChange={(e) => setJornadaSeleccionadaClasif(e.target.value)} style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '5px 8px', fontWeight: '700', fontSize: '11.5px', outline: 'none' }}>
+                <select value={jornadaSeleccionadaClasif} onChange={(e) => setJornadaSeleccionadaClasif(e.target.value)} style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '5px 8px', fontWeight: '700', fontSize: '11.5px', outline: 'none', color: '#0f172a' }}>
                   <option value="GENERAL">General Acumulada</option>
                   <option value="1">Jornada 1</option>
                   <option value="2">Jornada 2</option>
@@ -751,7 +786,7 @@ export default function App() {
             </div>
           )}
 
-          {/* CALENDARIO (EXTENDIDO Y OPTIMIZADO PARA APROVECHAR ESPACIO) */}
+          {/* CALENDARIO */}
           {tab === 'calendario' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -760,7 +795,7 @@ export default function App() {
                   <select 
                     value={jornadaSeleccionadaCalendario} 
                     onChange={(e) => setJornadaSeleccionadaCalendario(e.target.value)}
-                    style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '4px 8px', fontWeight: '700', fontSize: '11.5px', outline: 'none' }}
+                    style={{ backgroundColor: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '4px 8px', fontWeight: '700', fontSize: '11.5px', outline: 'none', color: '#0f172a' }}
                   >
                     {jornadasDisponiblesCalendario.map(j => (
                       <option key={j} value={j}>Jornada {j}</option>
@@ -899,36 +934,41 @@ export default function App() {
 
         </main>
 
-        {/* MODAL DE AYUDA Y REGLAMENTO OFICIAL */}
+        {/* MODAL DE AYUDA Y REGLAMENTO OFICIAL (AMPLIADO CON SISTEMA DE PUNTUACIONES) */}
         {mostrarAyudaModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 150, padding: '16px' }}>
             <div style={{ backgroundColor: '#ffffff', width: '100%', maxWidth: '400px', borderRadius: '20px', padding: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', maxHeight: '85vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
-                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#dc2626' }}>📖 Reglamento Oficial Grada Siete</h3>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#dc2626' }}>📖 Reglamento y Puntuaciones G7</h3>
                 <button onClick={() => setMostrarAyudaModal(false)} style={{ border: 'none', background: 'transparent', fontWeight: '900', fontSize: '18px', color: '#64748b', cursor: 'pointer' }}>✕</button>
               </div>
 
-              <div style={{ fontSize: '11.5px', color: '#334155', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#334155', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12.5px', marginBottom: '2px' }}>1. Composición de la Plantilla (22 + 2)</strong>
-                  <p style={{ margin: 0 }}>Toda plantilla consta de exactamente 22 futbolistas (2 Porteros, 7 Defensas, 7 Centrocampistas, 6 Delanteros) y 2 Entrenadores ANEFF.</p>
-                  <p style={{ margin: '4px 0 0 0', color: '#dc2626', fontWeight: '700' }}>• Restricción por Club: Máximo 3 jugadores del mismo equipo real. El Entrenador ANEFF es totalmente independiente y no cuenta en dicha suma.</p>
+                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12px', marginBottom: '2px' }}>1. Confección de la Plantilla (22 + 2)</strong>
+                  <p style={{ margin: 0 }}>Cada plantilla consta de 22 futbolistas (2 POR, 7 DEF, 7 CEN, 6 DEL) y 2 entrenadores ANEFF. Límite de 3 jugadores por cada club real (excepto entrenadores).</p>
                 </div>
 
                 <div>
-                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12.5px', marginBottom: '2px' }}>2. Mercado Continuo y Cambios</strong>
-                  <p style={{ margin: 0 }}>Cada mánager dispone de <strong>2 cambios libres por semana</strong> para modificar su plantilla de futbolistas.</p>
+                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12px', marginBottom: '2px' }}>2. Once Titular y Capitán</strong>
+                  <p style={{ margin: 0 }}>Modifica tu alineación y esquema táctico libremente cada semana. Designa a un <strong>Capitán ("C")</strong> para duplicar sus puntos (x2).</p>
                 </div>
 
                 <div>
-                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12.5px', marginBottom: '2px' }}>3. Once Titular y Capitán</strong>
-                  <p style={{ margin: 0 }}>La confección del once titular y el cambio de formación táctica es <strong>ilimitada</strong> cada semana.</p>
-                  <p style={{ margin: '2px 0 0 0' }}>• Designa un <strong>Capitán ("C")</strong> para obtener puntuación doble (x2).</p>
+                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12px', marginBottom: '2px' }}>3. Dinámica de Puntuaciones por Jornada</strong>
+                  <p style={{ margin: '0 0 4px 0' }}>Los puntos se calculan tras procesar las actas oficiales:</p>
+                  <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <li><strong>Minutos jugados:</strong> 1 punto si juega menos de 60'; 2 puntos con 60' o más.</li>
+                    <li><strong>Goles:</strong> +5 pts (Def/Por), +4 pts (Med), +3 pts (Del) y +3 pts por gol de penalti.</li>
+                    <li><strong>Portería a cero:</strong> +3 pts para porteros y +2 pts para defensas (con 60' o más jugados).</li>
+                    <li><strong>Tarjetas y Errores:</strong> Amarilla (-1), Doble Amarilla (-2), Roja Directa (-3), Gol en propia (-1).</li>
+                    <li><strong>Entrenadores ANEFF:</strong> Puntuación directa de <strong>0 a 7 puntos</strong> otorgada por la dirección según su rendimiento táctico en el banquillo.</li>
+                  </ul>
                 </div>
 
                 <div>
-                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12.5px', marginBottom: '2px' }}>4. Cierre de Jornada</strong>
-                  <p style={{ margin: 0 }}>Todos los <strong>sábados a las 14:00 h</strong> las alineaciones y cambios quedan bloqueados.</p>
+                  <strong style={{ color: '#0f172a', display: 'block', fontSize: '12px', marginBottom: '2px' }}>4. Cierre y Recuento</strong>
+                  <p style={{ margin: 0 }}>El plazo de cambios y alineaciones cierra estrictamente los <strong>sábados a las 14:00 h</strong>. Una vez validadas las actas, se computan los puntos y se abre la siguiente jornada.</p>
                 </div>
               </div>
 
@@ -985,7 +1025,7 @@ export default function App() {
                   getOpcionesTitularesDisponibles(slotActivo.tipo).map(j => (
                     <div key={j.id} onClick={() => seleccionarTitular(j.id)} style={{ padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                       <div>
-                        <span style={{ fontWeight: '700', fontSize: '13px', display: 'block' }}>{j.nombre}</span>
+                        <span style={{ fontWeight: '700', fontSize: '13px', display: 'block', color: '#0f172a' }}>{j.nombre}</span>
                         <span style={{ fontSize: '10px', color: '#64748b' }}>{j.equipo_real || 'Grupo 7'}</span>
                       </div>
                       <CheckCircle2 style={{ color: '#dc2626', width: '18px', height: '18px' }} />
@@ -997,7 +1037,7 @@ export default function App() {
           </div>
         )}
 
-        {/* NAVEGACIÓN INFERIOR (6 PESTAÑAS) */}
+        {/* NAVEGACIÓN INFERIOR */}
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 50, pointerEvents: 'none' }}>
           <div style={{ width: '100%', maxWidth: '440px', backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-around', padding: '6px 0 10px 0', pointerEvents: 'auto', boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.08)' }}>
             {[
