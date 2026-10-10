@@ -8,8 +8,10 @@ export default function App() {
   const [tab, setTab] = useState('once'); // 'once', 'plantilla', 'clasificacion', 'mvp', 'calendario', 'clasif_real'
   const [formacion, setFormacion] = useState('1-4-4-2');
   
-  // Estado para el acceso ultra rápido sin contraseña
+  // Estado para el acceso por Nombre de Equipo y Correo (sin contraseña)
   const [nombreAcceso, setNombreAcceso] = useState('');
+  const [correoAcceso, setCorreoAcceso] = useState('');
+  const [errorAcceso, setErrorAcceso] = useState('');
 
   // Base de Datos Supabase
   const [jugadoresBD, setJugadoresBD] = useState([]);
@@ -86,11 +88,17 @@ export default function App() {
 
   const handleAccesoRapido = (e) => {
     e.preventDefault();
-    if (!nombreAcceso.trim()) return;
+    setErrorAcceso('');
+
+    if (!nombreAcceso.trim() || !correoAcceso.trim()) {
+      setErrorAcceso('Introduce el nombre de tu equipo y tu correo electrónico.');
+      return;
+    }
 
     const nuevoUsuario = {
       id: 'user_' + Date.now(),
-      nombreEquipo: nombreAcceso.trim()
+      nombreEquipo: nombreAcceso.trim(),
+      correo: correoAcceso.trim()
     };
 
     localStorage.setItem('g7_fantasy_usuario', JSON.stringify(nuevoUsuario));
@@ -117,14 +125,20 @@ export default function App() {
     setTimeout(() => setAlerta(''), 2500);
   };
 
-  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE ACCESO ULTRA FÁCIL SIN CONTRASEÑA
+  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE ACCESO FÁCIL (EQUIPO + CORREO)
   if (!session) {
     return (
       <div className="notranslate" translate="no" style={{ backgroundColor: '#0f172a', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <div style={{ backgroundColor: '#ffffff', color: '#0f172a', width: '100%', maxWidth: '380px', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <img src={LOGO_GRADA_SIETE} alt="Grada Siete" style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 12px auto', display: 'block' }} />
           <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Liga Fantástica G7</h2>
-          <p style={{ margin: '0 0 20px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Introduce el nombre de tu club para entrar al instante</p>
+          <p style={{ margin: '0 0 16px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Introduce tu club y correo para acceder al instante</p>
+
+          {errorAcceso && (
+            <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
+              {errorAcceso}
+            </div>
+          )}
 
           <form onSubmit={handleAccesoRapido} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
             <div>
@@ -135,10 +149,21 @@ export default function App() {
                 onChange={(e) => setNombreAcceso(e.target.value)} 
                 placeholder="Ej. Grada Siete FC" 
                 required
-                style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
               />
             </div>
-            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO (PARA RECORDAR ACCESO)</label>
+              <input 
+                type="email" 
+                value={correoAcceso} 
+                onChange={(e) => setCorreoAcceso(e.target.value)} 
+                placeholder="manager@gradasiete.com" 
+                required
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+              />
+            </div>
+            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
               <UserCheck style={{ width: '16px', height: '16px' }} /> Entrar a la Liga
             </button>
           </form>
@@ -342,7 +367,7 @@ export default function App() {
         .ayuda-parpadeante {
           animation: pulseBlink 1.8s infinite ease-in-out;
         }
-        select, input[type="text"] {
+        select, input[type="text"], input[type="email"] {
           background-color: #ffffff !important;
           color: #0f172a !important;
           -webkit-appearance: none;
@@ -379,7 +404,7 @@ export default function App() {
             </button>
 
             <button onClick={handleLogout} style={{ backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-              Cambiar de Club
+              Salir
             </button>
           </div>
         </header>
