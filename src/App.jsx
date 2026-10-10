@@ -159,7 +159,7 @@ export default function App() {
         <div style={{ backgroundColor: '#ffffff', color: '#0f172a', width: '100%', maxWidth: '380px', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <img src={LOGO_GRADA_SIETE} alt="Grada Siete" style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 12px auto', display: 'block' }} />
           <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Liga Fantástica G7</h2>
-          <p style={{ margin: '0 0 16px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Fútbol Modesto de la Comunidad de Madrid</p>
+          <p style={{ margin: '0 0 16px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>EL FANTASY DEL GRUPO 7 DE TERCERA RFEF</p>
 
           {errorAuth && (
             <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
@@ -189,7 +189,7 @@ export default function App() {
             <form onSubmit={handleRegistrarse} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
               <h3 style={{ fontSize: '13px', fontWeight: '900', color: '#dc2626', margin: '0 0 4px 0', textAlign: 'center' }}>Crear tu Club Fantasy</h3>
               <div>
-                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁLAGER</label>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO </label>
                 <input 
                   type="text" 
                   value={nombreRegistro} 
