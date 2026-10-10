@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseclient';
-import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, LogIn } from 'lucide-react';
+import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, LogIn, KeyRound } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -8,10 +8,12 @@ export default function App() {
   const [tab, setTab] = useState('once'); // 'once', 'plantilla', 'clasificacion', 'mvp', 'calendario', 'clasif_real'
   const [formacion, setFormacion] = useState('1-4-4-2');
   
-  // Estados para Login
+  // Estados para Login y Recuperación
   const [emailLogin, setEmailLogin] = useState('');
   const [passwordLogin, setPasswordLogin] = useState('');
   const [errorLogin, setErrorLogin] = useState('');
+  const [mensajeRecuperacion, setMensajeRecuperacion] = useState('');
+  const [modoRecuperacion, setModoRecuperacion] = useState(false);
 
   // Base de Datos Supabase
   const [jugadoresBD, setJugadoresBD] = useState([]);
@@ -95,7 +97,6 @@ export default function App() {
     e.preventDefault();
     setErrorLogin('');
     if (!supabase) {
-      // Modo simulación si no hay cliente configurado
       setSession({ user: { email: emailLogin } });
       return;
     }
@@ -105,6 +106,30 @@ export default function App() {
     });
     if (error) {
       setErrorLogin(error.message);
+    }
+  };
+
+  const handleRecuperarPassword = async (e) => {
+    e.preventDefault();
+    setMensajeRecuperacion('');
+    setErrorLogin('');
+
+    if (!emailLogin) {
+      setErrorLogin('Introduce tu correo electrónico para recuperar la contraseña.');
+      return;
+    }
+
+    if (supabase) {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailLogin, {
+        redirectTo: window.location.origin,
+      });
+      if (error) {
+        setErrorLogin(error.message);
+      } else {
+        setMensajeRecuperacion('¡Correo enviado! Revisa tu bandeja de entrada para restablecer tu contraseña.');
+      }
+    } else {
+      setMensajeRecuperacion('Función de recuperación simulada. Revisa tu correo.');
     }
   };
 
@@ -132,7 +157,7 @@ export default function App() {
     );
   }
 
-  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE INICIO DE SESIÓN
+  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE INICIO DE SESIÓN O RECUPERACIÓN
   if (!session) {
     return (
       <div className="notranslate" translate="no" style={{ backgroundColor: '#0f172a', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
@@ -147,33 +172,77 @@ export default function App() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-            <div>
-              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
-              <input 
-                type="email" 
-                value={emailLogin} 
-                onChange={(e) => setEmailLogin(e.target.value)} 
-                placeholder="manager@gradasiete.com" 
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
-              />
+          {mensajeRecuperacion && (
+            <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #dcfce7', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
+              {mensajeRecuperacion}
             </div>
-            <div>
-              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CONTRASEÑA</label>
-              <input 
-                type="password" 
-                value={passwordLogin} 
-                onChange={(e) => setPasswordLogin(e.target.value)} 
-                placeholder="••••••••" 
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
-              />
-            </div>
-            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
-              <LogIn style={{ width: '15px', height: '15px' }} /> Iniciar Sesión
-            </button>
-          </form>
+          )}
+
+          {!modoRecuperacion ? (
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
+                <input 
+                  type="email" 
+                  value={emailLogin} 
+                  onChange={(e) => setEmailLogin(e.target.value)} 
+                  placeholder="manager@gradasiete.com" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CONTRASEÑA</label>
+                <input 
+                  type="password" 
+                  value={passwordLogin} 
+                  onChange={(e) => setPasswordLogin(e.target.value)} 
+                  placeholder="••••••••" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
+                <LogIn style={{ width: '15px', height: '15px' }} /> Iniciar Sesión
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => { setModoRecuperacion(true); setErrorLogin(''); setMensajeRecuperacion(''); }}
+                style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '10px', textAlign: 'center' }}
+              >
+                ¿Has olvidado tu contraseña?
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRecuperarPassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+              <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 6px 0', lineHeight: '1.4' }}>
+                Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.
+              </p>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
+                <input 
+                  type="email" 
+                  value={emailLogin} 
+                  onChange={(e) => setEmailLogin(e.target.value)} 
+                  placeholder="manager@gradasiete.com" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+              <button type="submit" style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <KeyRound style={{ width: '15px', height: '15px' }} /> Enviar Instrucciones
+              </button>
+
+              <button 
+                type="button" 
+                onClick={() => { setModoRecuperacion(false); setErrorLogin(''); setMensajeRecuperacion(''); }}
+                style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '10px', textAlign: 'center' }}
+              >
+                ← Volver al inicio de sesión
+              </button>
+            </form>
+          )}
         </div>
       </div>
     );
