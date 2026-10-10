@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseclient';
-import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, UserCheck } from 'lucide-react';
+import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, UserPlus, LogIn } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -8,10 +8,14 @@ export default function App() {
   const [tab, setTab] = useState('once'); // 'once', 'plantilla', 'clasificacion', 'mvp', 'calendario', 'clasif_real'
   const [formacion, setFormacion] = useState('1-4-4-2');
   
-  // Estado para el acceso por Nombre de Equipo y Correo (sin contraseña)
-  const [nombreAcceso, setNombreAcceso] = useState('');
-  const [correoAcceso, setCorreoAcceso] = useState('');
-  const [errorAcceso, setErrorAcceso] = useState('');
+  // Modos de autenticación: 'menu', 'registro', 'login'
+  const [modoAuth, setModoAuth] = useState('menu'); 
+
+  // Estados para formularios
+  const [nombreRegistro, setNombreRegistro] = useState('');
+  const [correoRegistro, setCorreoRegistro] = useState('');
+  const [correoLogin, setCorreoLogin] = useState('');
+  const [errorAuth, setErrorAuth] = useState('');
 
   // Base de Datos Supabase
   const [jugadoresBD, setJugadoresBD] = useState([]);
@@ -49,7 +53,7 @@ export default function App() {
   const LOGO_GRADA_SIETE = "https://gradasiete.com/wp-content/uploads/2023/02/cropped-logo-bueno-3.png";
 
   useEffect(() => {
-    // Comprobar si ya hay un usuario guardado en el navegador
+    // Comprobar si ya hay una sesión guardada en el navegador
     const usuarioGuardado = localStorage.getItem('g7_fantasy_usuario');
     if (usuarioGuardado) {
       const parsed = JSON.parse(usuarioGuardado);
@@ -86,19 +90,19 @@ export default function App() {
     }
   }, []);
 
-  const handleAccesoRapido = (e) => {
+  const handleRegistrarse = (e) => {
     e.preventDefault();
-    setErrorAcceso('');
+    setErrorAuth('');
 
-    if (!nombreAcceso.trim() || !correoAcceso.trim()) {
-      setErrorAcceso('Introduce el nombre de tu equipo y tu correo electrónico.');
+    if (!nombreRegistro.trim() || !correoRegistro.trim()) {
+      setErrorAuth('Introduce el nombre de tu equipo y tu correo electrónico.');
       return;
     }
 
     const nuevoUsuario = {
       id: 'user_' + Date.now(),
-      nombreEquipo: nombreAcceso.trim(),
-      correo: correoAcceso.trim()
+      nombreEquipo: nombreRegistro.trim(),
+      correo: correoRegistro.trim()
     };
 
     localStorage.setItem('g7_fantasy_usuario', JSON.stringify(nuevoUsuario));
@@ -106,9 +110,32 @@ export default function App() {
     setNombreEquipoFantasy(nuevoUsuario.nombreEquipo);
   };
 
+  const handleAcceder = (e) => {
+    e.preventDefault();
+    setErrorAuth('');
+
+    if (!correoLogin.trim()) {
+      setErrorAuth('Introduce tu correo electrónico para acceder.');
+      return;
+    }
+
+    // Simulamos / Buscamos la sesión guardada por correo
+    const usuarioMock = {
+      id: 'user_' + Date.now(),
+      nombreEquipo: correoLogin.split('@')[0].toUpperCase() + ' FC',
+      correo: correoLogin.trim()
+    };
+
+    localStorage.setItem('g7_fantasy_usuario', JSON.stringify(usuarioMock));
+    setSession(usuarioMock);
+    setNombreEquipoFantasy(usuarioMock.nombreEquipo);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('g7_fantasy_usuario');
     setSession(null);
+    setModoAuth('menu');
+    setErrorAuth('');
   };
 
   const guardarNombreEquipo = () => {
@@ -125,48 +152,97 @@ export default function App() {
     setTimeout(() => setAlerta(''), 2500);
   };
 
-  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE ACCESO FÁCIL (EQUIPO + CORREO)
+  // SI NO HAY SESIÓN, MOSTRAMOS EL MENÚ DE AUTENTICACIÓN (REGISTRO VS ACCESO)
   if (!session) {
     return (
       <div className="notranslate" translate="no" style={{ backgroundColor: '#0f172a', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <div style={{ backgroundColor: '#ffffff', color: '#0f172a', width: '100%', maxWidth: '380px', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <img src={LOGO_GRADA_SIETE} alt="Grada Siete" style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 12px auto', display: 'block' }} />
           <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Liga Fantástica G7</h2>
-          <p style={{ margin: '0 0 16px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Introduce tu club y correo para acceder al instante</p>
+          <p style={{ margin: '0 0 16px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Fútbol Modesto de la Comunidad de Madrid</p>
 
-          {errorAcceso && (
+          {errorAuth && (
             <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
-              {errorAcceso}
+              {errorAuth}
             </div>
           )}
 
-          <form onSubmit={handleAccesoRapido} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-            <div>
-              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁNAGER</label>
-              <input 
-                type="text" 
-                value={nombreAcceso} 
-                onChange={(e) => setNombreAcceso(e.target.value)} 
-                placeholder="Ej. Grada Siete FC" 
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
-              />
+          {modoAuth === 'menu' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button 
+                onClick={() => { setModoAuth('registro'); setErrorAuth(''); }}
+                style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}
+              >
+                <UserPlus style={{ width: '16px', height: '16px' }} /> Registrar Nuevo Equipo
+              </button>
+
+              <button 
+                onClick={() => { setModoAuth('login'); setErrorAuth(''); }}
+                style={{ width: '100%', backgroundColor: '#f1f5f9', color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <LogIn style={{ width: '16px', height: '16px' }} /> Ya estoy registrado (Entrar)
+              </button>
             </div>
-            <div>
-              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO (PARA RECORDAR ACCESO)</label>
-              <input 
-                type="email" 
-                value={correoAcceso} 
-                onChange={(e) => setCorreoAcceso(e.target.value)} 
-                placeholder="manager@gradasiete.com" 
-                required
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
-              />
-            </div>
-            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
-              <UserCheck style={{ width: '16px', height: '16px' }} /> Entrar a la Liga
-            </button>
-          </form>
+          )}
+
+          {modoAuth === 'registro' && (
+            <form onSubmit={handleRegistrarse} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '900', color: '#dc2626', margin: '0 0 4px 0', textAlign: 'center' }}>Crear tu Club Fantasy</h3>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁLAGER</label>
+                <input 
+                  type="text" 
+                  value={nombreRegistro} 
+                  onChange={(e) => setNombreRegistro(e.target.value)} 
+                  placeholder="Ej. Grada Siete FC" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
+                <input 
+                  type="email" 
+                  value={correoRegistro} 
+                  onChange={(e) => setCorreoRegistro(e.target.value)} 
+                  placeholder="manager@gradasiete.com" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+                />
+              </div>
+              <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                Completar Registro
+              </button>
+              <button type="button" onClick={() => setModoAuth('menu')} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '6px', textAlign: 'center' }}>
+                ← Volver al menú
+              </button>
+            </form>
+          )}
+
+          {modoAuth === 'login' && (
+            <form onSubmit={handleAcceder} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '900', color: '#0f172a', margin: '0 0 4px 0', textAlign: 'center' }}>Acceso con Correo</h3>
+              <p style={{ fontSize: '10.5px', color: '#64748b', margin: '0 0 4px 0' }}>Introduce tu correo electrónico registrado para acceder directamente:</p>
+              <div>
+                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
+                <input 
+                  type="email" 
+                  value={correoLogin} 
+                  onChange={(e) => setCorreoLogin(e.target.value)} 
+                  placeholder="manager@gradasiete.com" 
+                  required
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+                />
+              </div>
+              <button type="submit" style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                Entrar a mi Club
+              </button>
+              <button type="button" onClick={() => setModoAuth('menu')} style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '6px', textAlign: 'center' }}>
+                ← Volver al menú
+              </button>
+            </form>
+          )}
+
         </div>
       </div>
     );
