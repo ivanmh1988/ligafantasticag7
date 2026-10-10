@@ -142,7 +142,7 @@ export default function App() {
 
           <form onSubmit={handleAccesoRapido} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
             <div>
-              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁLAGER</label>
+              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁNAGER</label>
               <input 
                 type="text" 
                 value={nombreAcceso} 
