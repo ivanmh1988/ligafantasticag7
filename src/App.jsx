@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseclient';
-import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, LogIn, KeyRound } from 'lucide-react';
+import { Shield, Trophy, Calendar, Save, Clock, CheckCircle2, AlertCircle, Users, ChevronDown, Crown, Star, Table, UserCheck } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState('once'); // 'once', 'plantilla', 'clasificacion', 'mvp', 'calendario', 'clasif_real'
   const [formacion, setFormacion] = useState('1-4-4-2');
   
-  // Estados para Login y Recuperación
-  const [emailLogin, setEmailLogin] = useState('');
-  const [passwordLogin, setPasswordLogin] = useState('');
-  const [errorLogin, setErrorLogin] = useState('');
-  const [mensajeRecuperacion, setMensajeRecuperacion] = useState('');
-  const [modoRecuperacion, setModoRecuperacion] = useState(false);
+  // Estado para el acceso ultra rápido sin contraseña
+  const [nombreAcceso, setNombreAcceso] = useState('');
 
   // Base de Datos Supabase
   const [jugadoresBD, setJugadoresBD] = useState([]);
@@ -51,16 +47,15 @@ export default function App() {
   const LOGO_GRADA_SIETE = "https://gradasiete.com/wp-content/uploads/2023/02/cropped-logo-bueno-3.png";
 
   useEffect(() => {
+    // Comprobar si ya hay un usuario guardado en el navegador
+    const usuarioGuardado = localStorage.getItem('g7_fantasy_usuario');
+    if (usuarioGuardado) {
+      const parsed = JSON.parse(usuarioGuardado);
+      setSession(parsed);
+      setNombreEquipoFantasy(parsed.nombreEquipo || 'Grada Siete FC');
+    }
+
     if (supabase) {
-      supabase.auth.getSession().then(({ data }) => {
-        setSession(data?.session || null);
-        setLoading(false);
-      });
-
-      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-      });
-
       supabase.from('jugadores').select('*').eq('activo', true).then(({ data }) => {
         if (data) setJugadoresBD(data);
       });
@@ -86,57 +81,25 @@ export default function App() {
       supabase.from('clasificacion_real').select('*').then(({ data }) => {
         if (data) setClasificacionRealBD(data);
       });
-
-      return () => authListener?.subscription?.unsubscribe();
-    } else {
-      setLoading(false);
     }
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleAccesoRapido = (e) => {
     e.preventDefault();
-    setErrorLogin('');
-    if (!supabase) {
-      setSession({ user: { email: emailLogin } });
-      return;
-    }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailLogin,
-      password: passwordLogin,
-    });
-    if (error) {
-      setErrorLogin(error.message);
-    }
+    if (!nombreAcceso.trim()) return;
+
+    const nuevoUsuario = {
+      id: 'user_' + Date.now(),
+      nombreEquipo: nombreAcceso.trim()
+    };
+
+    localStorage.setItem('g7_fantasy_usuario', JSON.stringify(nuevoUsuario));
+    setSession(nuevoUsuario);
+    setNombreEquipoFantasy(nuevoUsuario.nombreEquipo);
   };
 
-  const handleRecuperarPassword = async (e) => {
-    e.preventDefault();
-    setMensajeRecuperacion('');
-    setErrorLogin('');
-
-    if (!emailLogin) {
-      setErrorLogin('Introduce tu correo electrónico para recuperar la contraseña.');
-      return;
-    }
-
-    if (supabase) {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailLogin, {
-        redirectTo: window.location.origin,
-      });
-      if (error) {
-        setErrorLogin(error.message);
-      } else {
-        setMensajeRecuperacion('¡Correo enviado! Revisa tu bandeja de entrada para restablecer tu contraseña.');
-      }
-    } else {
-      setMensajeRecuperacion('Función de recuperación simulada. Revisa tu correo.');
-    }
-  };
-
-  const handleLogout = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('g7_fantasy_usuario');
     setSession(null);
   };
 
@@ -145,104 +108,40 @@ export default function App() {
       setAlerta('Introduce un nombre válido para tu equipo.');
       return;
     }
+    if (session) {
+      const actualizado = { ...session, nombreEquipo: nombreEquipoFantasy };
+      localStorage.setItem('g7_fantasy_usuario', JSON.stringify(actualizado));
+      setSession(actualizado);
+    }
     setAlerta('¡Nombre de equipo guardado correctamente!');
     setTimeout(() => setAlerta(''), 2500);
   };
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0f172a', color: '#ffffff', fontFamily: 'sans-serif' }}>
-        <h3>Cargando Liga Fantástica Grada Siete...</h3>
-      </div>
-    );
-  }
-
-  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE INICIO DE SESIÓN O RECUPERACIÓN
+  // SI NO HAY SESIÓN, MOSTRAMOS LA PANTALLA DE ACCESO ULTRA FÁCIL SIN CONTRASEÑA
   if (!session) {
     return (
       <div className="notranslate" translate="no" style={{ backgroundColor: '#0f172a', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <div style={{ backgroundColor: '#ffffff', color: '#0f172a', width: '100%', maxWidth: '380px', borderRadius: '20px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <img src={LOGO_GRADA_SIETE} alt="Grada Siete" style={{ width: '64px', height: '64px', objectFit: 'contain', margin: '0 auto 12px auto', display: 'block' }} />
           <h2 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#0f172a' }}>Liga Fantástica G7</h2>
-          <p style={{ margin: '0 0 20px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Accede para gestionar tu club y tus alineaciones</p>
+          <p style={{ margin: '0 0 20px 0', fontSize: '11.5px', color: '#64748b', fontWeight: '600' }}>Introduce el nombre de tu club para entrar al instante</p>
 
-          {errorLogin && (
-            <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
-              {errorLogin}
+          <form onSubmit={handleAccesoRapido} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+            <div>
+              <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>NOMBRE DE TU EQUIPO / MÁLAGER</label>
+              <input 
+                type="text" 
+                value={nombreAcceso} 
+                onChange={(e) => setNombreAcceso(e.target.value)} 
+                placeholder="Ej. Grada Siete FC" 
+                required
+                style={{ width: '100%', padding: '11px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box', fontWeight: '800' }}
+              />
             </div>
-          )}
-
-          {mensajeRecuperacion && (
-            <div style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #dcfce7', borderRadius: '8px', padding: '8px', fontSize: '11px', fontWeight: '700', marginBottom: '14px' }}>
-              {mensajeRecuperacion}
-            </div>
-          )}
-
-          {!modoRecuperacion ? (
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-              <div>
-                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
-                <input 
-                  type="email" 
-                  value={emailLogin} 
-                  onChange={(e) => setEmailLogin(e.target.value)} 
-                  placeholder="manager@gradasiete.com" 
-                  required
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CONTRASEÑA</label>
-                <input 
-                  type="password" 
-                  value={passwordLogin} 
-                  onChange={(e) => setPasswordLogin(e.target.value)} 
-                  placeholder="••••••••" 
-                  required
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
-              <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
-                <LogIn style={{ width: '15px', height: '15px' }} /> Iniciar Sesión
-              </button>
-
-              <button 
-                type="button" 
-                onClick={() => { setModoRecuperacion(true); setErrorLogin(''); setMensajeRecuperacion(''); }}
-                style={{ background: 'transparent', border: 'none', color: '#dc2626', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '10px', textAlign: 'center' }}
-              >
-                ¿Has olvidado tu contraseña?
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleRecuperarPassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
-              <p style={{ fontSize: '11px', color: '#64748b', margin: '0 0 6px 0', lineHeight: '1.4' }}>
-                Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.
-              </p>
-              <div>
-                <label style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '3px' }}>CORREO ELECTRÓNICO</label>
-                <input 
-                  type="email" 
-                  value={emailLogin} 
-                  onChange={(e) => setEmailLogin(e.target.value)} 
-                  placeholder="manager@gradasiete.com" 
-                  required
-                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12px', background: '#f8fafc', color: '#0f172a', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
-              <button type="submit" style={{ width: '100%', backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '11px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                <KeyRound style={{ width: '15px', height: '15px' }} /> Enviar Instrucciones
-              </button>
-
-              <button 
-                type="button" 
-                onClick={() => { setModoRecuperacion(false); setErrorLogin(''); setMensajeRecuperacion(''); }}
-                style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '11px', fontWeight: '800', cursor: 'pointer', marginTop: '10px', textAlign: 'center' }}
-              >
-                ← Volver al inicio de sesión
-              </button>
-            </form>
-          )}
+            <button type="submit" style={{ width: '100%', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '12px', fontWeight: '900', fontSize: '13px', cursor: 'pointer', marginTop: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)' }}>
+              <UserCheck style={{ width: '16px', height: '16px' }} /> Entrar a la Liga
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -443,7 +342,7 @@ export default function App() {
         .ayuda-parpadeante {
           animation: pulseBlink 1.8s infinite ease-in-out;
         }
-        select, input[type="text"], input[type="password"], input[type="email"] {
+        select, input[type="text"] {
           background-color: #ffffff !important;
           color: #0f172a !important;
           -webkit-appearance: none;
@@ -480,7 +379,7 @@ export default function App() {
             </button>
 
             <button onClick={handleLogout} style={{ backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}>
-              Salir
+              Cambiar de Club
             </button>
           </div>
         </header>
